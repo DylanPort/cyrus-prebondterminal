@@ -1,26 +1,66 @@
 {
-  "name": "cyrus-pre-bond-terminal-backend",
-  "version": "1.0.0",
-  "description": "Backend for CYRUS PRE BOND TERMINAL",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "bcrypt": "^5.1.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-mongo-sanitize": "^2.2.0",
-    "express-rate-limit": "^6.7.0",
-    "helmet": "^6.0.1",
-    "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.4.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  }
+    "success": true,
+    "tokens": [
+        {
+            "id": "uuid-1",
+            "title": "Token Alpha",
+            "ticker": "ALPHA",
+            "description": "Description for Token Alpha.",
+            "imageUrl": "https://via.placeholder.com/150",
+            "upvotes": 50,
+            "comments": [],
+            "views": 1200,
+            "curveA": 0.1,
+            "curveB": 2,
+            "solTarget": 5,
+            "collectiveSOL": 0,
+            "committedWallets": []
+        },
+        {
+            "id": "uuid-2",
+            "title": "Token Beta",
+            "ticker": "BETA",
+            "description": "Description for Token Beta.",
+            "imageUrl": "https://via.placeholder.com/150",
+            "upvotes": 80,
+            "comments": [],
+            "views": 1800,
+            "curveA": 0.1,
+            "curveB": 2,
+            "solTarget": 5,
+            "collectiveSOL": 0,
+            "committedWallets": []
+        },
+        {
+            "id": "uuid-3",
+            "title": "Token Gamma",
+            "ticker": "GAMMA",
+            "description": "Description for Token Gamma.",
+            "imageUrl": "https://via.placeholder.com/150",
+            "upvotes": 0,
+            "comments": [],
+            "views": 0,
+            "curveA": 0.1,
+            "curveB": 2,
+            "solTarget": 5,
+            "collectiveSOL": 0,
+            "committedWallets": []
+        }
+    ],
+    "userBalance": 1000,
+    "name": "backend",
+    "version": "1.0.0",
+    "main": "server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node server.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+        "dotenv": "^16.4.5",
+        "mongoose": "^8.8.3"
+    }
 }
