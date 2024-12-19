@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CYRUS PRE BOND TERMINAL</title>
+    <!-- Meta Tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Solana Wallet Adapter CSS (Optional, depending on wallet UI) -->
+    <link href="https://unpkg.com/@solana/wallet-adapter-react-ui/styles.css" rel="stylesheet" />
+    <!-- Include CSS -->
+    <style>
+        /* Variables */
+        :root {
+            --background: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e6e6e6;
+            --button-color: #2c2c2c;
+            --button-hover: #3d3d3d;
+            --border-color: #333333;
+            --highlight: #00b894;
+            --highlight-light: #66b0ff;
+            --terminal-green: #00b894;
+            --terminal-green-glow: rgba(0, 184, 148, 0.3);
+            --progress-bg: rgba(0, 184, 148, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --notification-bg: rgba(0, 184, 148, 0.9);
+            --notification-text: #121212;
+        }
+
+        /* Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: auto auto auto auto auto auto;
+            gap: 1rem;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        /* Header with Wallet Connect/Disconnect */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .glowing-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--highlight);
+            letter-spacing: 0.2em;
+            position: relative;
+            display: inline-block;
+            text-shadow: 
+                0 0 10px var(--terminal-green-glow),
+                0 0 20px var(--terminal-green-glow),
+                0 0 40px var(--terminal-green-glow);
+            animation: pulse 2s infinite;
+        }
+
+        /* Title Container Styles */
+        .title-container {
+            grid-column: 1 / -1;
+            padding: 2rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                text-shadow: 
+                    0 0 10px var(--terminal-green-glow),
+                    0 0 20px var(--terminal-green-glow),
+                    0 0 40px var(--terminal-green-glow);
+            }
+            50% { 
+                text-shadow: 
+                    0 0 20px var(--terminal-green-glow),
+                    0 0 30px var(--terminal-green-glow),
+                    0 0 50px var(--terminal-green-glow);
+            }
+        }
+
+        /* Image Reel Styles */
+        .image-reel-container {
+            grid-column: 1 / 2;
+            height: 100px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        .image-reel {
+            display: flex;
+            animation: scrollReel 30s linear infinite;
+            padding: 1rem;
+            gap: 0.1rem;
+            height: 100%;
+            will-change: transform;
+        }
+
+        .image-reel:hover {
+            animation-play-state: paused;
+        }
+
+        .reel-image {
+            height: 100%;
+            border-radius: 10px;
+            aspect-ratio: 1;
+            object-fit: cover;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reel-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--terminal-green-glow);
+        }
+
+        @keyframes scrollReel {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .wallet-button {
+            background: var(--button-color);
+            color: var(--highlight);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .wallet-button:hover {
+            background: var(--button-hover);
+        }
+
+        /* Create Post Container Styles */
+        .create-post-container {
+            grid-column: 1 / 2;
+            grid-row: 3;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 
+                0 4px 6px var(--shadow-color),
+                0 1px 3px var(--shadow-color);
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .terminal-header {
+            color: var(--terminal-green);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-left: 1rem;
+            text-shadow: 0 0 10px var(--terminal-green-glow);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .terminal-header::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--terminal-green);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--terminal-green);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-shadow: 0 0 5px var(--terminal-green-glow);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .form-input, textarea, select {
+            width: 100%;
+            background: var(--background);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .form-input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--terminal-green);
+            box-shadow: 0 0 0 2px var(--terminal-green-glow);
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            background: var(--terminal-green);
+            color: var(--background);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--terminal-green-glow);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submit-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover::after {
+            animation: shine 1.5s infinite;
+        }
+
+        @keyframes shine {
+            100% { left: 200%; }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #uploadText {
+            color: var(--text-color);
+            opacity: 0.8;
+            transition: all 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Terminal Loading Animation */
+        .terminal-loading {
+            display: inline-block;
+            overflow: hidden;
+            height: 1.2em;
+            margin-left: 0.5em;
+            vertical-align: middle;
+        }
+
+        .terminal-loading::after {
+            content: '⠋';
+            animation: terminal-spin 600ms linear infinite;
+        }
+
+        @keyframes terminal-spin {
+            10% { content: '⠙'; }
+            20% { content: '⠹'; }
+            30% { content: '⠸'; }
+            40% { content: '⠼'; }
+            50% { content: '⠴'; }
+            60% { content: '⠦'; }
+            70% { content: '⠧'; }
+            80% { content: '⠇'; }
+            90% { content: '⠏'; }
+        }
+
+        /* Posts Container */
+        .posts-container {
+            grid-column: 2 / 3;
+            grid-row: 2 / 5;
+            overflow-y: auto;
+            padding-right: 1rem;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        .posts-container h2 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Post Item Styles */
+        .post-item {
+            background: var(--background);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            overflow: hidden;
+        }
+
+        .post-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px var(--shadow-color);
+        }
+
+        .post-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--highlight), var(--highlight-light));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .post-item:hover::before {
+            transform: scaleX(1);
+        }
+
+        .post-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .post-title {
+            font-size: 1.9rem;
+            font-weight: 600;
+            color: var(--highlight);
+            text-shadow: 0 0 10px var(--terminal-green-glow);
+            position: relative;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .post-title:hover {
+            transform: translateX(5px);
+            text-shadow: 0 0 15px var(--terminal-green-glow);
+        }
+
+        .post-ticker {
+            color: var(--highlight);
+            font-size: 1.2rem;
+            font-weight: 500;
+            text-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .post-ticker:hover {
+            transform: translateX(5px);
+            background: rgba(0, 123, 255, 0.2);
+        }
+
+        .post-description {
+            color: var(--text-color);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0.5rem 0;
+            opacity: 0.9;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .post-image {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .post-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+
+        /* Post Stats */
+        .post-stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .stat-badge {
+            background: var(--button-color);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .stat-badge:hover {
+            transform: translateY(-2px);
+            background: var(--card-bg);
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .stat-icon {
+            color: var(--highlight);
+            font-size: 1rem;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--button-color);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, 
+                var(--highlight), 
+                var(--highlight-light), 
+                var(--highlight));
+            background-size: 200% 100%;
+            animation: gradientMove 2s linear infinite;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        .progress-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--highlight);
+            filter: blur(4px);
+            opacity: 0.2;
+        }
+
+        .progress-text {
+            position: absolute;
+            right: 0;
+            top: -1.5rem;
+            font-size: 0.8rem;
+            color: var(--highlight);
+            font-weight: 500;
+            text-shadow: 0 0 5px var(--terminal-green-glow);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Commit and Upvote Interface */
+        .interaction-interface {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .commit-btn {
+            background: var(--highlight);
+            color: var(--background);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .commit-btn:hover {
+            background: var(--highlight-light);
+        }
+
+        .upvote-btn {
+            background: var(--button-color);
+            color: var(--highlight);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .upvote-btn:hover {
+            background: var(--button-hover);
+        }
+
+        .upvote-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Trending Container */
+        .trending-container {
+            grid-column: 3 / 4;
+            grid-row: 2 / 4;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .trending-container h2 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .trending-item {
+            padding: 1rem;
+            background: var(--background);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            animation: slideIn 0.3s ease forwards;
+            opacity: 0;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .trending-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                var(--highlight), 
+                var(--highlight-light));
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform 0.3s ease;
+        }
+
+        .trending-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .trending-item:hover {
+            transform: translateX(4px);
+            background: var(--card-bg);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .trending-rank {
+            font-size: 0.8rem;
+            color: var(--highlight);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .trending-rank::before {
+            content: '#';
+            font-size: 1rem;
+            color: var(--highlight-light);
+        }
+
+        .trending-title {
+            font-size: 1rem;
+            color: var(--text-color);
+            margin: 0.5rem 0;
+            transition: color 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .trending-item:hover .trending-title {
+            color: var(--highlight);
+        }
+
+        .trending-stats {
+            font-size: 0.8rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+            box-shadow: 0 0 20px var(--shadow-color);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--highlight);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .close-modal:hover {
+            transform: rotate(90deg);
+            color: var(--highlight-light);
+        }
+
+        .chat-container {
+            margin-top: 2rem;
+            background: var(--background);
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-message {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            animation: messageSlideIn 0.3s ease;
+            position: relative;
+        }
+
+        .chat-message-reply {
+            margin-left: 2rem;
+            border-left: 2px solid var(--highlight);
+        }
+
+        .chat-message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--highlight);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .chat-message-content {
+            color: var(--text-color);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .reply-button {
+            background: var(--button-color);
+            color: var(--highlight);
+            border: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .reply-button:hover {
+            background: var(--card-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--highlight);
+            box-shadow: 0 0 0 2px var(--terminal-green-glow);
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--notification-bg);
+            color: var(--notification-text);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            animation: slideInNotification 0.3s ease;
+            z-index: 1000;
+            font-family: 'Share Tech Mono', monospace;
+            display: none;
+        }
+
+        @keyframes slideInNotification {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .fade-out {
+            animation: fadeOut 0.3s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(20px); }
+        }
+
+        @keyframes messageSlideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Bonding Curve Container */
+        .bonding-curve-container {
+            grid-column: 1 / -1;
+            grid-row: 6;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            overflow: hidden;
+            position: relative;
+            height: 400px;
+        }
+
+        .bonding-curve-header {
+            color: var(--highlight);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .bonding-curve-chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Commit Modal Styles */
+        .commit-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .commit-modal-content {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+            box-shadow: 0 0 20px var(--shadow-color);
+            text-align: center;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .close-commit-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--highlight);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-commit-modal:hover {
+            transform: rotate(90deg);
+            color: var(--highlight-light);
+        }
+
+        .preset-amounts {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .preset-btn {
+            background: var(--button-color);
+            color: var(--highlight);
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+        }
+
+        .preset-btn:hover {
+            background: var(--button-hover);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            body {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto auto auto auto;
+            }
+
+            .image-reel-container {
+                grid-column: 1 / -1;
+            }
+
+            .create-post-container, .trending-container {
+                grid-column: 1 / -1;
+                grid-row: 4;
+            }
+
+            .posts-container {
+                grid-column: 1 / -1;
+                grid-row: 3;
+            }
+
+            .bonding-curve-container {
+                grid-column: 1 / -1;
+                grid-row: 5;
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto auto auto;
+            }
+
+            .bonding-curve-container {
+                grid-column: 1 / -1;
+                grid-row: 6;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Title Section -->
+    <div class="title-container">
+        <h1 class="glowing-title">
+            <!-- Individual letters with animation delays -->
+            <span>C</span>
+            <span>Y</span>
+            <span>R</span>
+            <span>U</span>
+            <span>S</span>
+            <span>&nbsp;</span>
+            <span>P</span>
+            <span>R</span>
+            <span>E</span>
+            <span>&nbsp;</span>
+            <span>B</span>
+            <span>O</span>
+            <span>N</span>
+            <span>D</span>
+            <span>&nbsp;</span>
+            <span>T</span>
+            <span>E</span>
+            <span>R</span>
+            <span>M</span>
+            <span>I</span>
+            <span>N</span>
+            <span>A</span>
+            <span>L</span>
+        </h1>
+    </div>
+
+    <!-- Header with Wallet Connect/Disconnect -->
+    <div class="header">
+        <button class="wallet-button" id="walletButton">Connect Wallet</button>
+    </div>
+
+    <!-- Image Reel -->
+    <div class="image-reel-container">
+        <div class="image-reel" id="imageReel">
+            <!-- Images will be loaded here dynamically -->
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+            <img src="https://via.placeholder.com/100" alt="Reel Image" class="reel-image">
+        </div>
+    </div>
+
+    <!-- Create Token Container -->
+    <div class="create-post-container">
+        <div class="terminal-header">Create Token<span class="terminal-loading"></span></div>
+        <form id="tokenCreationForm">
+            <div class="form-group">
+                <label class="form-label" for="tokenNameInput">Token Name *</label>
+                <input type="text" id="tokenNameInput" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="tokenSymbolInput">Token Symbol *</label>
+                <input type="text" id="tokenSymbolInput" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="tokenImageInput">Token Image *</label>
+                <input type="file" id="tokenImageInput" class="form-input" accept="image/*" required>
+                <small id="uploadText">Accepted formats: JPG, PNG. Max size: 2MB.</small>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="twitterLinkInput">Twitter Link (Optional)</label>
+                <input type="url" id="twitterLinkInput" class="form-input" placeholder="https://twitter.com/yourprofile">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="websiteLinkInput">Website Link (Optional)</label>
+                <input type="url" id="websiteLinkInput" class="form-input" placeholder="https://yourwebsite.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="telegramLinkInput">Telegram Link (Optional)</label>
+                <input type="url" id="telegramLinkInput" class="form-input" placeholder="https://t.me/yourchannel">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="curveAInput">Curve Parameter A *</label>
+                <input type="number" id="curveAInput" class="form-input" value="0.1" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="curveBInput">Curve Parameter B *</label>
+                <input type="number" id="curveBInput" class="form-input" value="2" step="0.1" required>
+            </div>
+            <button type="submit" class="submit-btn">Create Token</button>
+        </form>
+    </div>
+
+    <!-- Posts Container -->
+    <div class="posts-container" id="posts-container">
+        <h2>All Tokens</h2>
+        <!-- Posts will be loaded here dynamically -->
+    </div>
+
+    <!-- Trending Container -->
+    <div class="trending-container">
+        <div class="terminal-header">Trending Posts<span class="terminal-loading"></span></div>
+        <div id="trending-container">
+            <!-- Trending posts will be loaded here dynamically -->
+        </div>
+    </div>
+
+    <!-- Bonding Curve Container -->
+    <div class="bonding-curve-container">
+        <div class="bonding-curve-header">Bonding Curve</div>
+        <canvas id="bondingCurveChart" class="bonding-curve-chart"></canvas>
+    </div>
+
+    <!-- Commit Modal Structure -->
+    <div class="commit-modal-overlay" id="commitModal">
+        <div class="commit-modal-content">
+            <button class="close-commit-modal" id="closeCommitModal">&times;</button>
+            <h2>Commit SOL</h2>
+            <p>Select an amount to contribute:</p>
+            <div class="preset-amounts">
+                <button class="preset-btn" data-amount="0.2">0.2 SOL</button>
+                <button class="preset-btn" data-amount="0.5">0.5 SOL</button>
+                <button class="preset-btn" data-amount="1">1 SOL</button>
+                <button class="preset-btn" data-amount="1.5">1.5 SOL</button>
+                <button class="preset-btn" data-amount="2">2 SOL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Structure -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-modal" id="closeModal">&times;</button>
+            <div id="modalContent"></div>
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Type your comment...">
+                    <button id="sendComment" class="submit-btn">Send</button>
+                </div>
+                <!-- Embedded Trade Interface in Modal -->
+                <div class="interaction-interface">
+                    <button id="upvoteButton" class="upvote-btn">Upvote</button>
+                    <button id="commitButton" class="commit-btn">Commit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include JavaScript -->
+    <!-- Include Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Include Solana Wallet Adapter (Phantom Example) -->
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.30.2/lib/index.iife.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Get CSS variables
+            const rootStyles = getComputedStyle(document.documentElement);
+            const terminalGreen = rootStyles.getPropertyValue('--terminal-green').trim();
+            const highlightColor = rootStyles.getPropertyValue('--highlight').trim();
+            const textColor = rootStyles.getPropertyValue('--text-color').trim();
+            const fontFamily = 'Share Tech Mono';
+
+            // DOM Elements
+            const walletButton = document.getElementById("walletButton");
+            const postsContainer = document.getElementById("posts-container");
+            const trendingContainer = document.getElementById("trending-container");
+            const tokenCreationForm = document.getElementById("tokenCreationForm");
+            const tokenNameInput = document.getElementById("tokenNameInput");
+            const tokenSymbolInput = document.getElementById("tokenSymbolInput");
+            const tokenImageInput = document.getElementById("tokenImageInput");
+            const twitterLinkInput = document.getElementById("twitterLinkInput");
+            const websiteLinkInput = document.getElementById("websiteLinkInput");
+            const telegramLinkInput = document.getElementById("telegramLinkInput");
+            const curveAInput = document.getElementById("curveAInput");
+            const curveBInput = document.getElementById("curveBInput");
+            const uploadText = document.getElementById("uploadText");
+            const notification = document.getElementById("notification");
+            const modal = document.getElementById("modal");
+            const modalContent = document.getElementById("modalContent");
+            const closeModal = document.getElementById("closeModal");
+            const chatMessages = document.getElementById("chatMessages");
+            const chatInput = document.getElementById("chatInput");
+            const sendComment = document.getElementById("sendComment");
+            const bondingCurveChartElement = document.getElementById("bondingCurveChart");
+            const commitModal = document.getElementById("commitModal");
+            const closeCommitModal = document.getElementById("closeCommitModal");
+            const presetButtons = document.querySelectorAll(".preset-btn");
+            const upvoteButton = document.getElementById("upvoteButton");
+            const commitButton = document.getElementById("commitButton");
+
+            let currentPostId = null;
+            let userBalance = 1000; // Initialize with 1000 units
+            let tokens = [];
+            let bondingCurveChart = initializeBondingCurve();
+
+            // Solana Wallet Integration
+            let wallet = null;
+            let walletPublicKey = null;
+
+            // Initialize or retrieve walletId from localStorage
+            let walletId = localStorage.getItem('walletId');
+
+            // Fetch initial data from backend
+            fetchTokens();
+
+            // Notification Function
+            function showNotification(message, isError = false) {
+                notification.textContent = message;
+                notification.style.backgroundColor = isError ? 'rgba(255, 0, 0, 0.9)' : 'var(--notification-bg)';
+                notification.style.color = isError ? '#ffffff' : 'var(--notification-text)';
+                notification.style.display = 'block';
+                console.log(`Notification - ${isError ? 'Error' : 'Success'}: ${message}`);
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+
+            // Fetch Tokens from Backend
+            async function fetchTokens() {
+                console.log('Fetching tokens from backend...');
+                try {
+                    const response = await fetch('/api/tokens');
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to fetch tokens.');
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        tokens = data.tokens;
+                        userBalance = data.userBalance;
+                        console.log('Fetched tokens:', tokens);
+                        console.log('User Balance:', userBalance);
+                        renderPosts();
+                        loadTrending();
+                        updateBondingCurve();
+                    } else {
+                        showNotification('Failed to fetch tokens.', true);
+                        console.error('Fetch Tokens Error:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Fetch Tokens Exception:', error);
+                    showNotification('Error fetching tokens.', true);
+                }
+            }
+
+            // Token Creation Form Submission
+            tokenCreationForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = tokenNameInput.value.trim();
+                const symbol = tokenSymbolInput.value.trim().toUpperCase();
+                const a = parseFloat(curveAInput.value);
+                const b = parseFloat(curveBInput.value);
+
+                const twitterLink = twitterLinkInput.value.trim();
+                const websiteLink = websiteLinkInput.value.trim();
+                const telegramLink = telegramLinkInput.value.trim();
+
+                console.log(`Creating token - Name: ${name}, Symbol: ${symbol}, CurveA: ${a}, CurveB: ${b}, Twitter: ${twitterLink}, Website: ${websiteLink}, Telegram: ${telegramLink}`);
+
+                if (!name || !symbol || isNaN(a) || isNaN(b)) {
+                    showNotification('Please fill in all required fields correctly.', true);
+                    console.error('Form Validation Error: Incomplete or invalid data.');
+                    return;
+                }
+
+                // Handle Image Upload
+                const file = tokenImageInput.files[0];
+                if (!file) {
+                    showNotification('Please upload an image for the token.', true);
+                    console.error('Image Upload Error: No file selected.');
+                    return;
+                }
+
+                // Validate Image Size (e.g., max 2MB)
+                if (file.size > 2 * 1024 * 1024) { // 2MB
+                    showNotification('Image size exceeds 2MB.', true);
+                    console.error('Image Upload Error: File size too large.');
+                    return;
+                }
+
+                // Convert Image to Base64
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const base64Image = reader.result;
+
+                    try {
+                        const response = await fetch('/api/tokens', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                title: name,
+                                ticker: symbol,
+                                description: `Description for ${name}.`,
+                                imageUrl: base64Image, // Send base64 image
+                                curveA: a,
+                                curveB: b,
+                                twitterLink: twitterLink || null,
+                                websiteLink: websiteLink || null,
+                                telegramLink: telegramLink || null,
+                            }),
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            tokens.push(data.token);
+                            userBalance = data.userBalance || userBalance; // Update userBalance if provided
+                            console.log('Token created successfully:', data.token);
+                            renderPosts();
+                            loadTrending();
+                            updateBondingCurve();
+                            showNotification(`Token ${symbol} created successfully!`);
+                            tokenCreationForm.reset();
+                            curveAInput.value = '0.1';
+                            curveBInput.value = '2';
+                        } else {
+                            showNotification(data.message, true);
+                            console.error('Create Token Error:', data.message);
+                        }
+                    } catch (error) {
+                        console.error('Create Token Exception:', error);
+                        showNotification('Error creating token.', true);
+                    }
+                };
+
+                reader.onerror = () => {
+                    showNotification('Error reading the image file.', true);
+                    console.error('FileReader Error: Unable to read file.');
+                };
+            });
+
+            // Render Posts (Tokens)
+            function renderPosts() {
+                postsContainer.innerHTML = '<h2>All Tokens</h2>';
+                tokens.forEach(token => {
+                    const postElement = createPostElement(token);
+                    postsContainer.appendChild(postElement);
+                });
+                console.log('Rendered all posts.');
+            }
+
+            // Create Post Element
+            function createPostElement(token) {
+                const postElement = document.createElement('div');
+                postElement.classList.add('post-item');
+
+                // Calculate commit progress percentage
+                const progressPercentage = token.solTarget > 0 
+                    ? Math.min(100, ((token.collectiveSOL / token.solTarget) * 100).toFixed(2))
+                    : 0;
+
+                postElement.innerHTML = `
+                    <div class="post-content">
+                        <div class="post-title">${token.title}</div>
+                        <div class="post-ticker">${token.ticker}</div>
+                        <div class="post-description">${token.description}</div>
+                        
+                        ${token.twitterLink || token.websiteLink || token.telegramLink ? `
+                        <div class="form-group">
+                            ${token.twitterLink ? `<a href="${token.twitterLink}" target="_blank" class="form-label">Twitter</a>` : ''}
+                            ${token.websiteLink ? `<a href="${token.websiteLink}" target="_blank" class="form-label">Website</a>` : ''}
+                            ${token.telegramLink ? `<a href="${token.telegramLink}" target="_blank" class="form-label">Telegram</a>` : ''}
+                        </div>
+                        ` : ''}
+                        
+                        <div class="post-stats">
+                            <div class="stat-badge" title="Upvotes">
+                                <span class="stat-icon">↑</span>
+                                <span>${token.upvotes || 0}</span>
+                            </div>
+                            <div class="stat-badge" title="Comments">
+                                <span class="stat-icon">💬</span>
+                                <span>${token.comments ? token.comments.length : 0}</span>
+                            </div>
+                            <div class="stat-badge" title="Views">
+                                <span class="stat-icon">👁️</span>
+                                <span>${token.views ? token.views.toLocaleString() : '0'}</span>
+                            </div>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercentage}%">
+                                    <div class="progress-glow"></div>
+                                </div>
+                            </div>
+                            <div class="progress-text">${progressPercentage}%</div>
+                        </div>
+                        
+                        <div class="terminal-status">
+                            ${progressPercentage < 100 
+                                ? `Commit Progress: ${token.collectiveSOL.toFixed(2)} / ${token.solTarget.toFixed(2)} SOL`
+                                : 'SOL target reached! 🎉'}
+                        </div>
+
+                        <!-- Commit and Upvote Interface -->
+                        <div class="interaction-interface">
+                            <button class="commit-btn" data-token-id="${token.id}">Commit</button>
+                            <button class="upvote-btn" data-token-id="${token.id}">Upvote</button>
+                        </div>
+                    </div>
+                    <img src="${token.imageUrl}" 
+                        alt="${token.title}" 
+                        class="post-image" 
+                        onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=Image+Error'">
+                `;
+
+                // Event Listener to Open Modal
+                postElement.addEventListener('click', (e) => {
+                    // Prevent triggering when clicking on interaction buttons
+                    if (
+                        e.target.classList.contains('commit-btn') ||
+                        e.target.classList.contains('upvote-btn') ||
+                        e.target.closest('.commit-btn') ||
+                        e.target.closest('.upvote-btn')
+                    ) {
+                        return;
+                    }
+                    showPostModal(token.id);
+                });
+
+                // Commit Button Event Listener
+                const commitButtonElement = postElement.querySelector('.commit-btn');
+                commitButtonElement.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (!walletId) {
+                        showNotification('Please connect your Solana wallet to commit.', true);
+                        return;
+                    }
+                    showCommitModal(token.id);
+                });
+
+                // Upvote Button Event Listener
+                const upvoteBtn = postElement.querySelector('.upvote-btn');
+                upvoteBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (!walletId) {
+                        showNotification('Please connect your Solana wallet to upvote.', true);
+                        return;
+                    }
+                    await upvoteToken(token.id);
+                });
+
+                // Disable Upvote Button if already upvoted
+                if (token.upvotedWallets.includes(walletId)) {
+                    upvoteBtn.classList.add('disabled');
+                    upvoteBtn.disabled = true;
+                }
+
+                return postElement;
+            }
+
+            // Upvote Token Function
+            async function upvoteToken(tokenId) {
+                console.log(`Attempting to upvote Token ID: ${tokenId} by Wallet ID: ${walletId}`);
+                try {
+                    const response = await fetch(`/api/tokens/${tokenId}/upvote`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ walletId }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to upvote token.');
+                    }
+
+                    const data = await response.json();
+                    if (data.success) {
+                        // Update local data
+                        const index = tokens.findIndex(t => t.id === tokenId);
+                        if (index !== -1) {
+                            tokens[index] = data.token;
+                            userBalance = data.userBalance || userBalance; // Update userBalance if provided
+                            console.log('Upvoted token successfully:', data.message);
+                            renderPosts();
+                            loadTrending();
+                            updateBondingCurve();
+                            showNotification(data.message);
+                        }
+                    } else {
+                        showNotification(data.message, true);
+                        console.error('Upvote Token Error:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Upvote Token Exception:', error);
+                    showNotification('Error upvoting token.', true);
+                }
+            }
+
+            // Load Trending Posts
+            async function loadTrending() {
+                console.log('Fetching trending tokens from backend...');
+                try {
+                    const response = await fetch('/api/tokens/trending');
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to fetch trending tokens.');
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        trendingContainer.innerHTML = '';
+                        data.trending.forEach((token, index) => {
+                            const trendItem = document.createElement('div');
+                            trendItem.classList.add('trending-item');
+                            trendItem.innerHTML = `
+                                <div class="trending-rank">#${index + 1} • ${token.upvotes} upvotes</div>
+                                <div class="trending-title">${token.title}</div>
+                                <div class="trending-stats">
+                                    ${token.ticker} • ${token.views ? token.views.toLocaleString() : '0'} views
+                                </div>
+                            `;
+                            trendItem.addEventListener('click', () => showPostModal(token.id));
+                            trendingContainer.appendChild(trendItem);
+
+                            // Trigger animation
+                            requestAnimationFrame(() => {
+                                trendItem.style.opacity = '1';
+                            });
+                        });
+                        console.log('Loaded trending tokens.');
+                    } else {
+                        showNotification('Failed to load trending tokens.', true);
+                        console.error('Load Trending Error:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Load Trending Exception:', error);
+                    showNotification('Error loading trending tokens.', true);
+                }
+            }
+
+            // Show Post Modal
+            function showPostModal(tokenId) {
+                currentPostId = tokenId;
+                const token = tokens.find(t => t.id === tokenId);
+                if (token) {
+                    modalContent.innerHTML = `
+                        <h2>${token.title}</h2>
+                        <img src="${token.imageUrl}" alt="${token.title}" style="max-width: 100%; border-radius: 10px; margin-bottom: 1rem;">
+                        <p>${token.description}</p>
+                        ${token.twitterLink || token.websiteLink || token.telegramLink ? `
+                        <div class="form-group">
+                            ${token.twitterLink ? `<a href="${token.twitterLink}" target="_blank" class="form-label">Twitter</a>` : ''}
+                            ${token.websiteLink ? `<a href="${token.websiteLink}" target="_blank" class="form-label">Website</a>` : ''}
+                            ${token.telegramLink ? `<a href="${token.telegramLink}" target="_blank" class="form-label">Telegram</a>` : ''}
+                        </div>
+                        ` : ''}
+                    `;
+                    loadChatMessages(token.comments);
+                    modal.style.display = 'flex';
+                    console.log(`Opened modal for Token ID: ${tokenId}`);
+                }
+            }
+
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+                currentPostId = null;
+                chatInput.value = '';
+                console.log('Closed post modal.');
+            });
+
+            // Chat Functionality
+            sendComment.addEventListener('click', async () => {
+                const commentText = chatInput.value.trim();
+                if (!commentText) return;
+
+                const token = tokens.find(t => t.id === currentPostId);
+                if (token) {
+                    try {
+                        const response = await fetch(`/api/tokens/${token.id}/comments`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                user: walletPublicKey.toString(), // Use wallet public key as user identifier
+                                comment: commentText,
+                            }),
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to add comment.');
+                        }
+
+                        const data = await response.json();
+                        if (data.success) {
+                            token.comments.push(data.comment);
+                            loadChatMessages(token.comments);
+                            showNotification('Comment added successfully!');
+                            console.log('Added comment:', data.comment);
+                            chatInput.value = '';
+                        } else {
+                            showNotification(data.message, true);
+                            console.error('Add Comment Error:', data.message);
+                        }
+                    } catch (error) {
+                        console.error('Add Comment Exception:', error);
+                        showNotification('Error adding comment.', true);
+                    }
+                }
+            });
+
+            // Load Chat Messages
+            function loadChatMessages(comments) {
+                chatMessages.innerHTML = '';
+                comments.forEach(comment => {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('chat-message');
+                    messageElement.innerHTML = `
+                        <div class="chat-message-header">
+                            <span>${comment.user}</span>
+                            <span>${new Date(comment.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                        <div class="chat-message-content">${comment.comment}</div>
+                    `;
+                    chatMessages.appendChild(messageElement);
+                });
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                console.log('Loaded chat messages.');
+            }
+
+            // Initialize Bonding Curve Chart
+            function initializeBondingCurve() {
+                const ctx = bondingCurveChartElement.getContext('2d');
+                return new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Token Price',
+                            data: [],
+                            borderColor: terminalGreen,
+                            backgroundColor: 'rgba(0, 184, 148, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Total Supply',
+                                    color: textColor,
+                                    font: {
+                                        family: fontFamily
+                                    }
+                                },
+                                ticks: {
+                                    color: textColor,
+                                    font: {
+                                        family: fontFamily
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Price',
+                                    color: textColor,
+                                    font: {
+                                        family: fontFamily
+                                    }
+                                },
+                                ticks: {
+                                    color: textColor,
+                                    font: {
+                                        family: fontFamily
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: textColor,
+                                    font: {
+                                        family: fontFamily
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Update Bonding Curve Chart
+            function updateBondingCurve() {
+                // For simplicity, assume we're plotting for all tokens combined or specific logic
+                // Here, we plot each migrated token's bonding curve separately
+                bondingCurveChart.data.labels = [];
+                bondingCurveChart.data.datasets[0].data = [];
+
+                tokens.forEach(token => {
+                    if (token.migrated) {
+                        const A = token.curveA;
+                        const B = token.curveB;
+                        const s = token.upvotes;
+                        const price = calculateBondingCurvePrice(A, B, s, 1); // Price to buy next 1 token
+                        bondingCurveChart.data.labels.push(s);
+                        bondingCurveChart.data.datasets[0].data.push(price.toFixed(2));
+                    }
+                });
+
+                bondingCurveChart.update();
+                console.log('Updated bonding curve chart.');
+            }
+
+            // Placeholder function for bonding curve price calculation
+            function calculateBondingCurvePrice(A, B, s, delta) {
+                // Implement your bonding curve formula here
+                // Example: Linear bonding curve
+                return A * s + B;
+            }
+
+            // Commit Modal Functionality
+            function showCommitModal(tokenId) {
+                currentPostId = tokenId;
+                commitModal.style.display = 'flex';
+                console.log(`Opened commit modal for Token ID: ${tokenId}`);
+            }
+
+            closeCommitModal.addEventListener('click', () => {
+                commitModal.style.display = 'none';
+                currentPostId = null;
+                console.log('Closed commit modal.');
+            });
+
+            // Handle preset commit amounts
+            presetButtons.forEach(button => {
+                button.addEventListener('click', async () => {
+                    const amount = parseFloat(button.getAttribute('data-amount'));
+                    if (!currentPostId) {
+                        showNotification('No token selected for commit.', true);
+                        console.error('Commit Action Error: No token selected.');
+                        return;
+                    }
+                    console.log(`Committing ${amount} SOL to Token ID: ${currentPostId}`);
+                    await commitSOL(currentPostId, amount);
+                    commitModal.style.display = 'none';
+                });
+            });
+
+            // Commit SOL Function
+            async function commitSOL(tokenId, amount) {
+                console.log(`Attempting to commit ${amount} SOL to Token ID: ${tokenId}`);
+                try {
+                    const response = await fetch(`/api/tokens/${tokenId}/commit`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            amount,
+                            walletId,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to commit SOL.');
+                    }
+
+                    const data = await response.json();
+                    if (data.success) {
+                        // Update local data
+                        const index = tokens.findIndex(t => t.id === tokenId);
+                        if (index !== -1) {
+                            tokens[index] = data.token;
+                            userBalance = data.userBalance || userBalance; // Update if provided
+                            console.log('Committed SOL successfully:', data.message);
+                            renderPosts();
+                            loadTrending();
+                            updateBondingCurve();
+                            showNotification(data.message);
+                        }
+                    } else {
+                        showNotification(data.message, true);
+                        console.error('Commit SOL Error:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Commit SOL Exception:', error);
+                    showNotification('Error committing SOL.', true);
+                }
+            }
+
+            // Initialize or Connect Wallet
+            walletButton.addEventListener('click', async () => {
+                if (!wallet) {
+                    // Initialize Solana Wallet (Phantom)
+                    if (window.solana && window.solana.isPhantom) {
+                        try {
+                            const response = await window.solana.connect();
+                            wallet = window.solana;
+                            walletPublicKey = wallet.publicKey;
+                            walletId = walletPublicKey.toString();
+                            localStorage.setItem('walletId', walletId);
+                            walletButton.textContent = 'Disconnect Wallet';
+                            showNotification('Wallet connected successfully!');
+                            console.log(`Wallet connected: ${walletId}`);
+                        } catch (err) {
+                            console.error('Wallet Connection Error:', err);
+                            showNotification('Failed to connect wallet.', true);
+                        }
+                    } else {
+                        showNotification('Phantom Wallet not found. Please install it.', true);
+                        console.error('Phantom Wallet not found.');
+                    }
+                } else {
+                    try {
+                        await wallet.disconnect();
+                        wallet = null;
+                        walletPublicKey = null;
+                        walletId = null;
+                        localStorage.removeItem('walletId');
+                        walletButton.textContent = 'Connect Wallet';
+                        showNotification('Wallet disconnected.');
+                        console.log('Wallet disconnected.');
+                    } catch (err) {
+                        console.error('Wallet Disconnection Error:', err);
+                        showNotification('Failed to disconnect wallet.', true);
+                    }
+                }
+            });
+
+            // Initialize App
+            function initializeApp() {
+                // Check if wallet was previously connected
+                if (window.solana && window.solana.isPhantom && localStorage.getItem('walletId')) {
+                    window.solana.connect({ onlyIfTrusted: true })
+                        .then(response => {
+                            wallet = window.solana;
+                            walletPublicKey = wallet.publicKey;
+                            walletId = walletPublicKey.toString();
+                            walletButton.textContent = 'Disconnect Wallet';
+                            showNotification('Wallet connected successfully!');
+                            console.log(`Wallet connected: ${walletId}`);
+                        })
+                        .catch(err => {
+                            console.log('No wallet connection found.');
+                        });
+                }
+            }
+
+            // Start the app
+            initializeApp();
+
+            // Close modal when clicking outside content
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    currentPostId = null;
+                    chatInput.value = '';
+                    console.log('Clicked outside post modal. Closed modal.');
+                }
+                if (e.target === commitModal) {
+                    commitModal.style.display = 'none';
+                    currentPostId = null;
+                    console.log('Clicked outside commit modal. Closed modal.');
+                }
+            });
+
+            // Utility Function to Generate UUID (if needed)
+            function generateUUID() { // Public Domain/MIT
+                var d = new Date().getTime();//Timestamp
+                var d2 = (performance && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16;//random number between 0 and 16
+                    if(d > 0){
+                        r = (d + r)%16 | 0;
+                        d = Math.floor(d/16);
+                    } else {
+                        r = (d2 + r)%16 | 0;
+                        d2 = Math.floor(d2/16);
+                    }
+                    return (c==='x' ? r : (r&0x3|0x8)).toString(16);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
